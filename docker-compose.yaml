@@ -1,0 +1,6 @@
+services:
+  kafka_server:
+    image: apache/kafka:4.1.0 
+    ports:
+      - "9092:9092"
+    restart: always
