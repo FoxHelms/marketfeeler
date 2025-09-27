@@ -9,12 +9,12 @@ from textblob import TextBlob
 
 load_dotenv()
 
-fh_key = os.environ.get("KEY", "finhubb key not found")
+fh_key = os.environ.get("FH_API_KEY", "finhubb key not found")
 fh_client = finnhub.Client(api_key=fh_key)
 
 
 STOCKS = ["AAPL", "MSFT", "TSLA", "GOOGL"]
-TOPIC = "headline.sentiment"
+TOPIC = "sentiment.scores"
 today_date = datetime.now().date().strftime("%Y-%m-%d")
 time_delta_months = 3
 earlier_date = (datetime.now().date() - timedelta(time_delta_months * 30)).strftime("%Y-%m-%d")
@@ -41,7 +41,10 @@ def fetch_news(symbol):
     news_sent_avg["summary"]["s"] = news_sent_avg["summary"]["s"] / num_news
     return {
         "symbol": symbol,
-        "news": news_sent_avg,  # current price
+        "headline_p": news_sent_avg["headline"]["p"],
+        "headline_s": news_sent_avg["headline"]["s"],
+        "summary_p": news_sent_avg["summary"]["p"],
+        "summary_s": news_sent_avg["summary"]["s"],
         "timestamp": datetime.utcnow().isoformat() + "Z",
         "source": "finnhub"
     }
@@ -49,11 +52,15 @@ def fetch_news(symbol):
 while True:
     for symbol in STOCKS:
         event = fetch_news(symbol)
-        producer.send(
+        try:
+            future = producer.send(
             TOPIC,
             key=event['symbol'],
             value=event
-        )
-        print(f"Sent: {event}")
+            )
+            result = future.get(timeout=5)
+            print(f"Sent to kafka: {result}")
+        except Exception as e:
+            print(f'Error sending sentiments to kafka: {e}')
     time.sleep(15)  # API call limit: 60 calls / minute, 30 calls / second
 
