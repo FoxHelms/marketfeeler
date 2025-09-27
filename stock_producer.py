@@ -8,11 +8,11 @@ import json
 
 load_dotenv()
 
-fh_key = os.environ.get("KEY", "finhubb key not found")
+fh_key = os.environ.get("FH_API_KEY", "finhub key not found")
 fh_client = finnhub.Client(api_key=fh_key)
 
 
-STOCKS = ["AAPL", "MSFT", "TSLA", "GOOGL", "OANDA:XAU_USD"]
+STOCKS = ["AAPL", "MSFT", "TSLA", "GOOGL"]
 TOPIC = "stock.prices"
 
 producer = KafkaProducer(
